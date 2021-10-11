@@ -1,8 +1,22 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from './users/users.module';
+import { SocketEventsModule } from './socketEvents/socketEvents.module';
+import { User } from './users/user.entity';
+import { Message } from './chat/message.enity';
+import { AuthenticationMiddleware } from './globalMiddleware/authentication.middleware';
+import { UsersController } from './users/users.controller';
+import { ChatController } from './chat/chat.controller';
+import { ChatModule } from './chat/chat.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -17,7 +31,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         password: configService.get('DATABASE_PASSWORD'),
         database: configService.get('DATABASE'),
 
-        entities: [],
+        entities: [User, Message],
         synchronize: true, //this should be false in production
         // ssl: true,
         // extra: {
@@ -28,8 +42,22 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
+    UsersModule,
+    ChatModule,
+    SocketEventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthenticationMiddleware)
+      .exclude('auth')
+      .forRoutes(UsersController, ChatController, {
+        path: 'api/v1/auth/logout',
+        method: RequestMethod.GET,
+      });
+  }
+}

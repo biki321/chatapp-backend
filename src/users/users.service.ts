@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateUserDto } from './create-user.dto';
+import { Not, Repository } from 'typeorm';
 import { User } from './user.entity';
 
 @Injectable()
@@ -11,12 +10,11 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  create(user: CreateUserDto): Promise<CreateUserDto & User> {
-    return this.usersRepository.save(user);
-  }
-
-  findOneByEmail(email: string) {
-    return this.usersRepository.findOne({ where: { email: email } });
+  create(username: string, password: string): Promise<User> {
+    return this.usersRepository.save({
+      username: username,
+      password: password,
+    });
   }
 
   findOneByUserName(username: string) {
@@ -31,6 +29,10 @@ export class UsersService {
   findMany(ids: string[], relations?: string[]): Promise<User[]> {
     if (!relations) return this.usersRepository.findByIds(ids);
     else return this.usersRepository.findByIds(ids, { relations: relations });
+  }
+
+  findManyNotIds(ids: string[]) {
+    return this.usersRepository.find({ where: { id: Not(ids) } });
   }
 
   async remove(id: string): Promise<User> {

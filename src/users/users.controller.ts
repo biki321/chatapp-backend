@@ -1,41 +1,10 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Param,
-  Post,
-  Res,
-} from '@nestjs/common';
+import { Controller, Get, HttpStatus, Param, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { CreateUserDto } from './create-user.dto';
 import { UsersService } from './users.service';
 
 @Controller('api/v1/user')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  async createUser(
-    @Body() body: CreateUserDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    if (await this.usersService.findOneByEmail(body.email)) {
-      res.status(HttpStatus.NOT_ACCEPTABLE);
-      return {
-        statusCode: HttpStatus.NOT_ACCEPTABLE,
-        message: 'email already exist',
-      };
-    } else if (await this.usersService.findOneByUserName(body.username)) {
-      res.status(HttpStatus.NOT_ACCEPTABLE);
-      return {
-        statusCode: HttpStatus.NOT_ACCEPTABLE,
-        message: 'username already exist',
-      };
-    }
-
-    return this.usersService.create(body);
-  }
 
   @Get(':id')
   async getUserById(

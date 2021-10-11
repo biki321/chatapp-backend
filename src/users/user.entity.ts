@@ -6,14 +6,17 @@ export class User {
   id: string;
 
   @Column({ unique: true })
-  email: string;
-
-  @Column({ unique: true })
   username: string;
+
+  @Column()
+  password: string;
 
   @Column({ nullable: true })
   avatar: string;
 
   @Column({ nullable: true })
   bio: string;
+
+  @Column({ default: 0 })
+  tokenVersion: number;
 }
