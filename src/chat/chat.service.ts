@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { timestamp } from 'rxjs';
 import { clientList } from 'src/clientList';
 import { User } from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
-import { In, LessThan, Repository } from 'typeorm';
+import { In, LessThan, MoreThan, Repository } from 'typeorm';
 import { MessageDto } from './message.dto';
 import { Message } from './message.enity';
+import { Thread } from './thread.entity';
 
 // userId
 // otherUserId
@@ -19,9 +21,11 @@ export class ChatService {
   constructor(
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
+    @InjectRepository(Thread)
+    private readonly threadRepository: Repository<Thread>,
     private readonly userSerivice: UsersService,
   ) {}
-
+  // 2021-10-14T06:31:14.710Z
   getMessages(
     userId: string,
     otherUserId: string,
@@ -60,6 +64,75 @@ export class ChatService {
     return msg;
   }
 
+  async createThread(message: Message) {
+    await this.threadRepository.insert([
+      {
+        userId: message.userId,
+        otherUserId: message.otherUserId,
+        messageId: message.id,
+        senderId: message.senderId,
+        text: message.text.substr(0, 10),
+        timestamp: message.timestamp,
+        read: message.read,
+      },
+      {
+        userId: message.otherUserId,
+        otherUserId: message.userId,
+        messageId: message.id,
+        senderId: message.senderId,
+        text: message.text.substr(0, 10),
+        timestamp: message.timestamp,
+        read: message.read,
+      },
+    ]);
+  }
+
+  async updateThread(message: Message) {
+    await this.threadRepository.update(
+      { userId: message.userId, otherUserId: message.otherUserId },
+      {
+        messageId: message.id,
+        senderId: message.senderId,
+        text: message.text.substr(0, 10),
+        timestamp: message.timestamp,
+        read: message.read,
+      },
+    );
+    await this.threadRepository.update(
+      { userId: message.otherUserId, otherUserId: message.userId },
+      {
+        messageId: message.id,
+        senderId: message.senderId,
+        text: message.text.substr(0, 10),
+        timestamp: message.timestamp,
+        read: message.read,
+      },
+    );
+  }
+
+  async updateThreadRead(userId: string, otherUserId: string) {
+    await this.threadRepository.update(
+      {
+        userId: userId,
+        otherUserId: otherUserId,
+      },
+      { read: true },
+    );
+    await this.threadRepository.update(
+      {
+        userId: otherUserId,
+        otherUserId: userId,
+      },
+      { read: true },
+    );
+  }
+
+  async findThread(userId: string, otherUserId: string) {
+    return await this.threadRepository.find({
+      where: { userId: userId, otherUserId: otherUserId },
+    });
+  }
+
   async updateRead(userId: string, otherUserId: string, ids: string[]) {
     let r = await this.messageRepository.update(
       { userId: userId, otherUserId: otherUserId, id: In(ids) },
@@ -68,7 +141,7 @@ export class ChatService {
       },
     );
     r = await this.messageRepository.update(
-      { userId: otherUserId, otherUserId: userId, id: In(ids) },
+      { userId: otherUserId, otherUserId: userId, read: false },
       {
         read: true,
       },
@@ -91,50 +164,44 @@ export class ChatService {
     }
   }
 
-  async threads(userId: string) {
-    const msgs = await this.messageRepository.find({
+  async getThreads(userId: string) {
+    const threads = await this.threadRepository.find({
       where: { userId: userId },
-      relations: ['otherUser'],
       order: { timestamp: 'DESC' },
-      take: 1,
-    });
-    const usersIds = msgs.map((e) => e.otherUserId);
-
-    let users: User[] = [];
-    // if (usersIds && usersIds.length > 0) {
-    //   users = await this.userSerivice.findManyNotIds(usersIds);
-    // } else {
-    users = await this.userSerivice.findManyNotIds(usersIds);
-    // }
-
-    console.log('users at threads', users);
-
-    const threads = msgs.map((e) => ({
-      user: {
-        ...e.otherUser,
-        userOnline: clientList[e.otherUserId] ? true : false,
-      },
-
-      message: {
-        userId: e.userId,
-        otherUserId: e.otherUserId,
-        id: e.id,
-        senderId: e.senderId,
-        text: e.text,
-        read: e.read,
-        timestamp: e.timestamp,
-      },
-    }));
-
-    users.forEach((e) => {
-      threads.push({
-        user: { ...e, userOnline: clientList[e.id] ? true : false },
-        message: null,
-      });
+      relations: ['otherUser'],
     });
 
     console.log('threads', threads);
 
-    return threads;
+    const otherUsersIds = threads.map((thread) => thread.otherUser.id);
+    otherUsersIds.push(userId);
+
+    const usersExcludingSenders = await this.userSerivice.findManyNotIds(
+      otherUsersIds,
+    );
+
+    const finalThreads = threads.map((thread) => ({
+      otherUser: {
+        ...thread.otherUser,
+        online: clientList[thread.otherUserId] ? true : false,
+      },
+      threadMessage: {
+        userId: thread.userId,
+        otherUserId: thread.otherUserId,
+        messageId: thread.messageId,
+        senderId: thread.senderId,
+        text: thread.text,
+        timestamp: thread.timestamp,
+        read: thread.read,
+      },
+    }));
+
+    usersExcludingSenders.forEach((user) =>
+      finalThreads.push({
+        otherUser: { ...user, online: clientList[user.id] ? true : false },
+        threadMessage: null,
+      }),
+    );
+    return finalThreads;
   }
 }

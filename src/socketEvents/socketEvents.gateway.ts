@@ -17,13 +17,6 @@ import '../clientList';
 import { clientList } from '../clientList';
 import { UsePipes, ValidationPipe } from '@nestjs/common';
 
-//events client can listen to
-// un_authenticated
-// user_status
-// updated_thread
-// get_message
-// internal_server_error
-
 @WebSocketGateway({
   cors: {
     origin: ['http://localhost:3000'],
@@ -70,7 +63,7 @@ export class SocketEventsGateway
       clientList[userId] = socket.id;
       socket.broadcast.emit('user_status', {
         userId: userId,
-        status: 'online',
+        online: true,
       });
     }
   }
@@ -83,7 +76,7 @@ export class SocketEventsGateway
         delete clientList[key];
         socket.broadcast.emit('user_status', {
           userId: key,
-          status: 'offline',
+          online: false,
         });
       }
     });
@@ -111,12 +104,23 @@ export class SocketEventsGateway
       try {
         const message = await this.chatService.createMessage(data);
         console.log('creted msg', message);
+
+        //if otherUserId is online send the msg
         if (clientList[data.otherUserId]) {
-          socket.to(clientList[data.otherUserId]).emit('get_message', message);
+          socket.to(clientList[data.otherUserId]).emit(`get_message`, message);
           console.log('at send message');
-          socket
-            .to(clientList[data.otherUserId])
-            .emit('updated_thread', message);
+        }
+
+        //update thread
+        const thread = await this.chatService.findThread(
+          message.userId,
+          message.otherUserId,
+        );
+        console.log('threads', thread);
+        if (thread.length > 0) {
+          await this.chatService.updateThread(message);
+        } else {
+          await this.chatService.createThread(message);
         }
       } catch (error) {
         console.log('error at handleMsg SKt', error);
@@ -133,18 +137,16 @@ export class SocketEventsGateway
   @SubscribeMessage('update_read')
   async handleUpdateRead(
     @ConnectedSocket() socket: Socket,
-    args: [
-      {
-        userId: string;
-        otherUserId: string;
-        ids: string[];
-      },
-      // ({ status: string }) => void,
-    ],
+    @MessageBody()
+    data: {
+      userId: string;
+      otherUserId: string;
+      ids: string[];
+    },
   ) {
     // const { data, ack } = this.chatService.extractRequest(args);
-    const data = args[0];
-    console.log('data at update_read', data);
+    // const data = args[0];
+    console.log('data at update_read', data.userId);
     try {
       const r = await this.chatService.updateRead(
         data.userId,
@@ -152,9 +154,28 @@ export class SocketEventsGateway
         data.ids,
       );
       console.log(r);
+
+      //update thread
+      await this.chatService.updateThreadRead(data.userId, data.otherUserId);
+
+      //send the other user the read update if he/she is online
+      clientList[data.otherUserId] &&
+        socket.to(clientList[data.otherUserId]).emit(`get_read_update`, {
+          // userId: data.userId,
+          otherUserId: data.userId,
+          // ids: data.ids,
+        });
+
       // ack({ status: 'ok' });
     } catch (error) {
       // ack({ status: 'failed' });
     }
   }
 }
+
+//events client can listen to
+// un_authenticated
+// user_status
+// get_message
+// internal_server_error
+// get_read_update

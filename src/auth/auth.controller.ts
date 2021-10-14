@@ -32,7 +32,7 @@ export class AuthController {
       response.status(HttpStatus.NOT_ACCEPTABLE);
       return {
         statusCode: HttpStatus.NOT_ACCEPTABLE,
-        message: 'username already exist',
+        error: 'username already exist',
       };
     }
 
@@ -59,7 +59,7 @@ export class AuthController {
       response.status(HttpStatus.NOT_FOUND);
       return {
         statusCode: HttpStatus.NOT_FOUND,
-        message: 'user do not exist',
+        error: 'user do not exist',
       };
     }
 
@@ -81,7 +81,7 @@ export class AuthController {
       response.status(HttpStatus.UNAUTHORIZED);
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
-        message: 'password did not match',
+        error: 'password did not match',
       };
     }
   }
@@ -160,9 +160,9 @@ export class AuthController {
     await this.usersService.save(user);
 
     response.clearCookie('erwty');
-    response.status(HttpStatus.UNAUTHORIZED);
+    response.status(HttpStatus.NO_CONTENT);
     return {
-      statusCode: HttpStatus.UNAUTHORIZED,
+      statusCode: HttpStatus.NO_CONTENT,
     };
   }
 }

@@ -17,4 +17,7 @@ export class MessageDto {
   text: string;
 
   read?: boolean;
+
+  // @IsDateString()
+  timestamp: string;
 }

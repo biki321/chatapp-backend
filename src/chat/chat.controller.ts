@@ -7,19 +7,26 @@ export class ChatController {
   constructor(private readonly chatSerivce: ChatService) {}
 
   @Get('/messages/:otherUserId')
-  getMessages(
+  async getMessages(
     @Param('otherUserId') otherUserId: string,
     @Req() req: Request,
     @Query('lastTimeStamp') lastTimeStamp: string,
   ) {
     const userId = req.app.locals.user.id;
     console.log('lastTimeStamp at getMsgs', lastTimeStamp);
-    return this.chatSerivce.getMessages(userId, otherUserId, lastTimeStamp);
+    const r = await this.chatSerivce.getMessages(
+      userId,
+      otherUserId,
+      lastTimeStamp,
+    );
+    console.log(r);
+    return r;
   }
 
   @Get('/threads')
   getThreads(@Req() req: Request) {
+    console.log('userID at chat controller', req.app.locals.user.id);
     const userId = req.app.locals.user.id;
-    return this.chatSerivce.threads(userId);
+    return this.chatSerivce.getThreads(userId);
   }
 }

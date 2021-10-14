@@ -1,11 +1,5 @@
 import { User } from 'src/users/user.entity';
-import {
-  Entity,
-  Column,
-  CreateDateColumn,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity()
 export class Message {
@@ -21,10 +15,13 @@ export class Message {
   @Column('uuid')
   senderId: string;
 
-  @Column('varchar', { length: 500 })
+  @Column('varchar', { length: 500, default: '' })
   text: string;
 
-  @CreateDateColumn({ type: 'timestamp without time zone', default: 'NOW()' })
+  // default: 'NOW()'
+  // send timestamp from client in utc iso format and set database timezone to utc.
+  // this way things worked
+  @Column({ type: 'timestamp with time zone' })
   timestamp: Date;
 
   @Column({ default: false })

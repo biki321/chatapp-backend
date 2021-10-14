@@ -17,6 +17,7 @@ import { UsersController } from './users/users.controller';
 import { ChatController } from './chat/chat.controller';
 import { ChatModule } from './chat/chat.module';
 import { AuthModule } from './auth/auth.module';
+import { Thread } from './chat/thread.entity';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { AuthModule } from './auth/auth.module';
         password: configService.get('DATABASE_PASSWORD'),
         database: configService.get('DATABASE'),
 
-        entities: [User, Message],
+        entities: [User, Message, Thread],
         synchronize: true, //this should be false in production
         // ssl: true,
         // extra: {

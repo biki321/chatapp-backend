@@ -1,6 +1,8 @@
 import { Controller, Get, HttpStatus, Param, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { UsersService } from './users.service';
+import '../clientList';
+import { clientList } from '../clientList';
 
 @Controller('api/v1/user')
 export class UsersController {
@@ -19,6 +21,6 @@ export class UsersController {
         message: 'Not found',
       };
     }
-    return user;
+    return { ...user, online: clientList[user.id] ? true : false };
   }
 }
