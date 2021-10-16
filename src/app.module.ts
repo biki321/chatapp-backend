@@ -34,12 +34,12 @@ import { Thread } from './chat/thread.entity';
 
         entities: [User, Message, Thread],
         synchronize: true, //this should be false in production
-        // ssl: true,
-        // extra: {
-        //   ssl: {
-        //     rejectUnauthorized: false,
-        //   },
-        // },
+        ssl: true,
+        extra: {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        },
       }),
       inject: [ConfigService],
     }),
