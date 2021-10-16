@@ -47,8 +47,9 @@ export class SocketEventsGateway
     } catch (error) {
       console.log('disconnect socket at verifyAccessToken');
       socket
-        .to(socket.id)
+        // .to(socket.id)
         .emit('un_authenticated', { error: 'UnAuthenticated' });
+      console.log('\nun_authenticated evnet sent ');
       socket.disconnect();
     }
     return null;
