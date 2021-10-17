@@ -172,6 +172,22 @@ export class SocketEventsGateway
       // ack({ status: 'failed' });
     }
   }
+
+  @SubscribeMessage('send_typing')
+  async handleTyping(
+    @ConnectedSocket() socket: Socket,
+    @MessageBody()
+    data: {
+      userId: string;
+      otherUserId: string;
+    },
+  ) {
+    clientList[data.otherUserId] &&
+      socket.to(clientList[data.otherUserId]).emit(`get_typing`, {
+        userId: data.otherUserId,
+        otherUserId: data.userId,
+      });
+  }
 }
 
 //events client can listen to

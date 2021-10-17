@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
+import { Gender } from './gender.enum';
 import { User } from './user.entity';
 
 @Injectable()
@@ -18,8 +19,7 @@ export class UsersService {
   getUsersKeyWithOutPass = (): (keyof User)[] => [
     'id',
     'username',
-    'avatar',
-    'bio',
+    'gender',
     'tokenVersion',
   ];
 
@@ -27,10 +27,11 @@ export class UsersService {
     return this.usersRepository.find({ select: ['id'] });
   }
 
-  create(username: string, password: string): Promise<User> {
+  create(username: string, password: string, gender: string): Promise<User> {
     return this.usersRepository.save({
       username: username,
       password: password,
+      gender: gender === 'male' ? Gender.MALE : Gender.FEMALE,
     });
   }
 
@@ -75,9 +76,9 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async updateUserData(userId: number, bio: string) {
-    const user = await this.usersRepository.findOne(userId);
-    user.bio = bio;
-    return this.usersRepository.save(user);
-  }
+  // async updateUserData(userId: number, bio: string) {
+  //   const user = await this.usersRepository.findOne(userId);
+  //   user.bio = bio;
+  //   return this.usersRepository.save(user);
+  // }
 }

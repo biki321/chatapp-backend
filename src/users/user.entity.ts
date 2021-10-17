@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Gender } from './gender.enum';
 
 @Entity()
 export class User {
@@ -11,11 +12,12 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ nullable: true })
-  avatar: string;
-
-  @Column({ nullable: true })
-  bio: string;
+  @Column({
+    type: 'enum',
+    enum: Gender,
+    default: Gender.MALE,
+  })
+  gender: Gender;
 
   @Column({ default: 0 })
   tokenVersion: number;

@@ -37,7 +37,11 @@ export class AuthController {
     }
 
     const hashedPassword = await this.authService.hashPassword(body.password);
-    const user = await this.usersService.create(body.username, hashedPassword);
+    const user = await this.usersService.create(
+      body.username,
+      hashedPassword,
+      body.gender,
+    );
     response.cookie('erwty', await this.authService.createRefreshToken(user), {
       httpOnly: true,
     });
