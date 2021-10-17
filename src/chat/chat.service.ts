@@ -146,7 +146,7 @@ export class ChatService {
         read: true,
       },
     );
-    console.log('update read at chat service', r);
+
     return r;
   }
 
@@ -170,8 +170,6 @@ export class ChatService {
       order: { timestamp: 'DESC' },
       relations: ['otherUser'],
     });
-
-    console.log('threads', threads);
 
     const otherUsersIds = threads.map((thread) => thread.otherUser.id);
     otherUsersIds.push(userId);

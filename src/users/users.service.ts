@@ -59,7 +59,6 @@ export class UsersService {
   }
 
   findManyNotIds(ids: string[]) {
-    console.log('ids', ids);
     return this.usersRepository.find({
       select: this.getUsersKeyWithOutPass(),
       where: { id: Not(In(ids)) },

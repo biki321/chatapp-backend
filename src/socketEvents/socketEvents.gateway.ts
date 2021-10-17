@@ -39,28 +39,23 @@ export class SocketEventsGateway
   server: Server;
 
   verifyAccessToken(token: string, socket: Socket): string | null {
-    console.log('\ntoken at verifyAccessToken', token);
-
     try {
       const payload = this.jwtService.verify(token.split(' ')[1]);
       return payload.id;
     } catch (error) {
-      console.log('disconnect socket at verifyAccessToken');
       socket
         // .to(socket.id)
         .emit('un_authenticated', { error: 'UnAuthenticated' });
-      console.log('\nun_authenticated evnet sent ');
+
       socket.disconnect();
     }
     return null;
   }
 
   handleConnection(socket: Socket) {
-    console.log('client trying to connect');
     const accessToken = socket.handshake.headers.authorization;
     const userId = this.verifyAccessToken(accessToken, socket);
     if (userId) {
-      console.log('payload at token verify at ahndle connection', userId);
       clientList[userId] = socket.id;
       socket.broadcast.emit('user_status', {
         userId: userId,
@@ -71,7 +66,7 @@ export class SocketEventsGateway
 
   handleDisconnect(socket: Socket) {
     //delete entry from clientList
-    console.log('socket disconnected');
+
     Object.keys(clientList).forEach((key) => {
       if (socket.id === clientList[key]) {
         delete clientList[key];
@@ -91,7 +86,6 @@ export class SocketEventsGateway
     @ConnectedSocket() socket: Socket,
     @MessageBody() data: MessageDto,
   ) {
-    console.log('\nmessge at handleMsgEvent ');
     //check authenticate or not
 
     // data = JSON.parse(data);
@@ -99,17 +93,12 @@ export class SocketEventsGateway
     const accessToken = socket.handshake.headers.authorization;
     const userId = this.verifyAccessToken(accessToken, socket);
     if (userId) {
-      console.log('payload at token verify at handle msg ', userId);
-      console.log('\ndata at msg', data);
-
       try {
         const message = await this.chatService.createMessage(data);
-        console.log('creted msg', message);
 
         //if otherUserId is online send the msg
         if (clientList[data.otherUserId]) {
           socket.to(clientList[data.otherUserId]).emit(`get_message`, message);
-          console.log('at send message');
         }
 
         //update thread
@@ -117,14 +106,13 @@ export class SocketEventsGateway
           message.userId,
           message.otherUserId,
         );
-        console.log('threads', thread);
+
         if (thread.length > 0) {
           await this.chatService.updateThread(message);
         } else {
           await this.chatService.createThread(message);
         }
       } catch (error) {
-        console.log('error at handleMsg SKt', error);
         socket.emit('internal_server_error', {
           error: 'internal server error',
         });
@@ -147,14 +135,13 @@ export class SocketEventsGateway
   ) {
     // const { data, ack } = this.chatService.extractRequest(args);
     // const data = args[0];
-    console.log('data at update_read', data.userId);
+
     try {
       const r = await this.chatService.updateRead(
         data.userId,
         data.otherUserId,
         data.ids,
       );
-      console.log(r);
 
       //update thread
       await this.chatService.updateThreadRead(data.userId, data.otherUserId);

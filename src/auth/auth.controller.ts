@@ -49,7 +49,7 @@ export class AuthController {
       'Authorization',
       await this.authService.createAccessToken(user),
     );
-    // console.log('headers', response.getHeaders());
+    //
     return user;
   }
 
@@ -79,7 +79,7 @@ export class AuthController {
         'Authorization',
         await this.authService.createAccessToken(user),
       );
-      // console.log('headers', response.getHeaders());
+      //
       return user;
     } else {
       response.status(HttpStatus.UNAUTHORIZED);
@@ -95,7 +95,6 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    console.log(request.cookies);
     const refreshToken = request.cookies['erwty'];
     if (!refreshToken) {
       response.set('Authorization', '').status(HttpStatus.UNAUTHORIZED);
@@ -109,7 +108,6 @@ export class AuthController {
     try {
       payload = this.authService.verifyRefreshToken(refreshToken);
     } catch (error) {
-      console.log(error);
       response.set('Authorization', '').status(HttpStatus.UNAUTHORIZED);
       return {
         statusCode: HttpStatus.UNAUTHORIZED,
@@ -143,7 +141,7 @@ export class AuthController {
       'Authorization',
       await this.authService.createAccessToken(user),
     );
-    // console.log('headers', response.getHeaders());
+    //
     return user;
   }
 
