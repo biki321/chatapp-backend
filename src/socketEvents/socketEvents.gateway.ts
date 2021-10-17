@@ -19,7 +19,7 @@ import { UsePipes, ValidationPipe } from '@nestjs/common';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3000', 'https://chatapp3210.netlify.app'],
     credentials: true,
     exposedHeaders: ['Authorization'],
     // exposedHeaders: '*',
