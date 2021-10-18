@@ -12,6 +12,14 @@ checkout [live](https://chatapp3210.netlify.app/)
 - postgresql db for storing data (user info, message etc.)
 - socket.io for Bidirectional communication between client and server.
 
+**Features**
+
+- authentication using jwt(it has both refreshtoken and accesstoken implementation)
+- one to one messaging.
+- online status of user
+- message read receipt, message sent time, separation of messages in the message box by date, loading more messages
+- users list on left with their online status
+
 This repo is for the backend code
 here is the [client code](https://github.com/biki321/chatapp-client)
 
